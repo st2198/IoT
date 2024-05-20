@@ -1,70 +1,101 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { LightSensor } from 'expo-sensors';
+import { Subscription } from 'expo-sensors/build/Pedometer';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { useThemeColor } from '@/hooks/useThemeColor';
 
 export default function HomeScreen() {
+  const backgroundColor = useThemeColor({}, 'background');
+  const tint = useThemeColor({}, 'tint');
+
+  const [{ illuminance }, setData] = useState({ illuminance: 0 });
+  const subscription = useRef<Subscription | null>(null);
+
+  console.log('illuminance', illuminance);
+
+  useEffect(() => {
+    _toggle();
+
+    return () => {
+      _unsubscribe();
+    };
+  }, []);
+
+  const _toggle = () => {
+    if (subscription.current) {
+      _unsubscribe();
+    } else {
+      _subscribe();
+    }
+  };
+
+  const _subscribe = () => {
+    subscription.current = LightSensor.addListener(setData);
+  };
+
+  const _unsubscribe = () => {
+    subscription.current?.remove();
+    subscription.current = null;
+  };
+
+  // useEffect(() => {
+  //   const sendData = async () => {
+  //     if (!illuminance) {
+  //       await fetch('', {
+  //         method: 'POST',
+  //         body: JSON.stringify({ illuminance }),
+  //       });
+  //     }
+  //   };
+
+  //   sendData();
+  // }, [illuminance]);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
+    <View style={[{ backgroundColor }, styles.container]}>
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
+        <ThemedText type='title'>Check your light!</ThemedText>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({ ios: 'cmd + d', android: 'cmd + m' })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+
+      <View style={styles.buttonWrapper}>
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: tint }]}
+          activeOpacity={0.7}
+          onPress={_toggle}
+        >
+          <Text>Check</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+  },
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
+    height: '60%',
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  buttonWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    fontSize: 20,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  button: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '65%',
+    height: 50,
+    borderRadius: 12,
   },
 });
