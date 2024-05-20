@@ -1,0 +1,14 @@
+client/node_modules
+client/.expo
+
+server/node_modules
+
+.env
+*.log
+
+.DS_Store
+Thumbs.db
+
+.vscode/
+.idea/
+*.swp
